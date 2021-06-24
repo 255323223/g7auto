@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "g7auto"
+version = "0.1.0"
+description = ""
+authors = ["coolxv <coolxv_6533@qq.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+selenium = "^3.141"
+Kivy = "^2.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+pyinstaller = "^4.3"
+
+[[tool.poetry.source]]
+name = "ten"
+url = "https://mirrors.cloud.tencent.com/pypi/simple"
+
+[tool.poetry.scripts]
+g7 = "g7auto.g7ui:main"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
