@@ -5,10 +5,12 @@ import os
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 
 from kivy.app import App
 from kivy.uix.button import Button
@@ -27,34 +29,46 @@ class AutoExe():
 
   
   def exec(self):
+    self.driver.implicitly_wait(10) # seconds
     self.driver.get("http://deppon-g7s.co.huoyunren.com/#home.html")
     self.driver.maximize_window()
-    # self.driver.find_element(By.ID, "username").click()
-    # self.driver.find_element(By.ID, "username").send_keys("DP_dlyy127")
-    # self.driver.find_element(By.ID, "passwd").click()
-    # self.driver.find_element(By.ID, "passwd").send_keys("DP_dlyy127")
-    # self.driver.find_element(By.ID, "form_button").click()
-    #div.enjoyhint_close_btn
-    # self.driver.find_element(By.CSS_SELECTOR, "li:nth-child(4) .menu-item-parent").click()
-    # self.driver.find_element(By.LINK_TEXT, "报警中心").click()
-    # self.vars["window_handles"] = self.driver.window_handles
-    # self.driver.find_element(By.LINK_TEXT, "实时风险监控台new").click()
-    # self.vars["win6292"] = self.wait_for_window(2000)
-    # self.driver.switch_to.window(self.vars["win6292"])
-    # self.driver.find_element(By.CSS_SELECTOR, ".filter-item:nth-child(2) .el-checkbox-button:nth-child(3) > .el-checkbox-button__inner").click()
-    # self.driver.find_element(By.CSS_SELECTOR, ".search-button > span").click()
-    # self.driver.find_element(By.CSS_SELECTOR, ".car-table-tr-div:nth-child(1) .dealStatus").click()
-    # self.driver.find_element(By.CSS_SELECTOR, ".deal-content > p:nth-child(1) > span").click()
-    # self.driver.find_element(By.CSS_SELECTOR, ".intervene-reason-tag:nth-child(10)").click()
-    # self.driver.find_element(By.CSS_SELECTOR, ".reason-list > .intervene-reason-tag:nth-child(1)").click()
-    # self.driver.find_element(By.CSS_SELECTOR, "div:nth-child(1) > .ant-btn").click()
-    # self.driver.find_element(By.CSS_SELECTOR, ".search-button").click()
-    # self.driver.find_element(By.CSS_SELECTOR, ".car-table-tr-div:nth-child(1) .spec").click()
-    # self.driver.find_element(By.CSS_SELECTOR, ".deal-content > p:nth-child(1) > span").click()
-    # self.driver.find_element(By.CSS_SELECTOR, ".intervene-reason-tag:nth-child(8)").click()
-    # self.driver.find_element(By.CSS_SELECTOR, ".reason-list > .intervene-reason-tag:nth-child(1)").click()
-    # self.driver.find_element(By.CSS_SELECTOR, "div:nth-child(1) > .ant-btn > span").click()
-    # element = self.driver.find_element(By.CSS_SELECTOR, ".ant-btn-clicked")
+    try:
+      element = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located((By.XPATH, "//*[@id='left-panel']/nav/ul/li[1]/a")))
+    except TimeoutException:
+      self.driver.find_element(By.ID, "username").click()
+      self.driver.find_element(By.ID, "username").send_keys("DP_dlyy127")
+      self.driver.find_element(By.ID, "passwd").click()
+      self.driver.find_element(By.ID, "passwd").send_keys("DP_dlyy127")
+      self.driver.find_element(By.ID, "form_button").click()
+    # 去除指引
+    try:
+      self.driver.find_element(By.XPATH, "/html/body/div[11]/div[9]").click()
+    except:
+        pass    
+    # 实时风险监控台new
+    try:
+      self.driver.find_element(By.XPATH, "//*[@id='left-panel']/nav/ul/li[4]/a/span").click()
+      self.driver.find_element(By.XPATH, "//*[@id='left-panel']/nav/ul/li[4]/ul/li[2]/a").click()
+      self.driver.find_element(By.XPATH, "//*[@id='left-panel']/nav/ul/li[4]/ul/li[2]/ul/li[1]/a").click()
+    except:
+      pass
+    finally:
+      self.driver.switch_to.window(self.driver.window_handles[1]) 
+    # 选择中高风险
+    try:
+      self.driver.find_element(By.XPATH, "//*[@id='content']/div[2]/div[1]/div[1]/div/label[3]/span").click()
+    except:
+        pass   
+    # 进行查询
+    try:
+      self.driver.find_element(By.XPATH, "//*[@id='content']/div[2]/div[1]/button/span").click()
+    except:
+        pass
+    # 点击第一项 
+    try:
+      self.driver.find_element(By.XPATH, "//*[@id='listBody']/div[3]/div[1]").click()
+    except:
+        pass   
     # actions = ActionChains(self.driver)
     # actions.move_to_element(element).perform()
     # element = self.driver.find_element(By.CSS_SELECTOR, "body")
