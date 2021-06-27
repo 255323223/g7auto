@@ -1,37 +1,51 @@
 # -*- mode: python ; coding: utf-8 -*-
-import sys
-import platform
 
-block_cipher = None
+import sys
+from kivy_deps import sdl2, glew
+from kivy.tools.packaging.pyinstaller_hooks import get_deps_minimal,hookspath
+from PyInstaller.utils.hooks import collect_submodules
 cwd = os.getcwd().replace("\\", "/")
 ver = f"{sys.version_info.major}.{sys.version_info.minor}"
 
+block_cipher = None
+
+excludekivy = get_deps_minimal(video=None, audio=None,spelling=None,camera=None)['excludes']
+
+print(cwd)
 
 a = Analysis([f'{cwd}/g7auto/g7ui.py'],
-             pathex=[f'{cwd}/src', cwd],
-             binaries=[],
-             datas=[],
-             hiddenimports=[''],
-             hookspath=[],
-             runtime_hooks=[],
-             excludes=[],
-             win_no_prefer_redirects=False,
-             win_private_assemblies=False,
-             cipher=block_cipher,
-             noarchive=False)
+            pathex=[f'{cwd}/g7auto/'],
+            binaries=[],
+            hiddenimports=['six','packaging','packaging.version','packaging.specifiers','configparser'], #collect_submodules('kivy.garden'),
+            hookspath=[],
+            runtime_hooks=[],
+            win_no_prefer_redirects=False,
+            win_private_assemblies=False,
+            cipher=block_cipher,
+            excludes = excludekivy,
+			noarchive=False)
+
+    
 pyz = PYZ(a.pure, a.zipped_data,
-             cipher=block_cipher)
+            cipher=block_cipher)
+    
 exe = EXE(pyz,
-          a.scripts,
-          a.binaries,
-          a.zipfiles,
-          a.datas,
-          [],
-          name='g7auto',
-          debug=False,
-          bootloader_ignore_signals=False,
-          strip=False,
-          upx=True,
-          upx_exclude=[],
-          runtime_tmpdir=None,
-          console=True )
+        a.scripts,
+        a.binaries,
+        a.zipfiles,
+        a.datas,
+        *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
+        name='g7auto',
+        debug=False,
+        strip=False,
+        upx=True,
+        console=False )
+		
+coll = COLLECT(exe, Tree(f'{cwd}/g7auto/'),
+               a.binaries,
+               a.zipfiles,
+               a.datas,
+               *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
+               strip=False,
+               upx=True,
+               name='g7auto')

@@ -15,6 +15,8 @@ from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 
+import os 
+os.environ['KIVY_IMAGE'] = 'pil,sdl2'
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.lang import Builder
@@ -23,6 +25,10 @@ from kivy.uix.screenmanager import ScreenManager
 from kivy.config import Config
 from kivy.uix.floatlayout import FloatLayout
 from kivy.core.window import Window
+
+# config
+from kivy.config import Config
+Config.set('kivy', 'keyboard_mode', 'systemandmulti')
 
 class AutoExe():
   def setup_method(self):
@@ -225,3 +231,6 @@ def main():
   Config.set('graphics','resizable',False) 
   Window.size = (300, 150)
   TestApp().run()
+
+if __name__ == "__main__":
+    main()
