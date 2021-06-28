@@ -25,6 +25,7 @@ from kivy.uix.screenmanager import ScreenManager
 from kivy.config import Config
 from kivy.uix.floatlayout import FloatLayout
 from kivy.core.window import Window
+from KivyOnTop import register_topmost, unregister_topmost
 
 # config
 from kivy.config import Config
@@ -85,11 +86,18 @@ class AutoExe():
         print("选择中高风险")  
     while self.running: 
       while self.running: 
-        # 进行查询
+        # 进行查询 
+        try:
+          if not self.running: return
+          self.driver.find_element(By.XPATH, "//*[@id='content']/div[3]/div/div[1]/span[3]/i").click()
+          #time.sleep(2)
+        except:
+          print("隐藏侧边栏")
+        # 进行查询 
         try:
           if not self.running: return
           self.driver.find_element(By.XPATH, "//*[@id='content']/div[2]/div[1]/button/span").click()
-          time.sleep(3)
+          time.sleep(2)
         except:
           print("点击查询")
           break
@@ -127,7 +135,7 @@ class AutoExe():
           if not self.running: return
           num = random.randint(1,15)
           self.driver.find_element(By.XPATH, f"//*[@id='content']/div[12]/div[2]/div/div[1]/div[2]/div/div[3]/div/span[{num}]").click()
-          time.sleep(2)
+          time.sleep(1)
         except:
           print("选择干预原因")
           continue
@@ -136,7 +144,7 @@ class AutoExe():
           # 已接通并干预
           if not self.running: return
           self.driver.find_element(By.XPATH, "//*[@id='content']/div[12]/div[2]/div/div[1]/div[2]/div/div[4]/div/span[1]").click()
-          time.sleep(2)
+          time.sleep(1)
         except:
           print("已接通并干预")
           continue
@@ -144,16 +152,16 @@ class AutoExe():
         try:
           if not self.running: return
           self.driver.find_element(By.XPATH, "//*[@id='content']/div[12]/div[2]/div/div[1]/div[3]/div/button/span").click()
-          time.sleep(2)
+          time.sleep(1)
         except:
           print("保存")
           continue
-        self.wait_for_window(2)
-      count = 5
-      while(count > 0):
-        if not self.running: return
-        self.wait_for_window(2)
-        count = count - 1
+        # time.sleep(1)
+      # count = 1
+      # while(count > 0):
+      #   if not self.running: return
+      #   self.wait_for_window(2)
+      #   count = count - 1
     # actions = ActionChains(self.driver)
     # actions.move_to_element(element).perform()
     # element = self.driver.find_element(By.CSS_SELECTOR, "body")
@@ -223,9 +231,18 @@ class StopScreen(Screen):
     pass
 
 class TestApp(App):
-    def build(self):
-        self.title = 'g7auto'
-        return ScreenManager()
+  def on_start(self, *args):
+    title = 'G7Auto'
+    Window.set_title(title)
+
+    # Register top-most
+    register_topmost(Window, title)
+
+    # Unregister top-most (not necessary, only an example)
+    self.bind(on_stop=lambda *args, w=Window, t=title: unregister_topmost(w, t))
+  def build(self):
+    #self.title = 'g7auto'
+    return ScreenManager()
 
 def main():
   Config.set('graphics','resizable',False) 

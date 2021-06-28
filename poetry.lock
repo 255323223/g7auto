@@ -210,6 +210,19 @@ url = "https://mirrors.cloud.tencent.com/pypi/simple"
 reference = "ten"
 
 [[package]]
+name = "kivyontop"
+version = "1.4"
+description = "Makes Kivy windows stay on top of other windows."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.source]
+type = "legacy"
+url = "https://mirrors.cloud.tencent.com/pypi/simple"
+reference = "ten"
+
+[[package]]
 name = "macholib"
 version = "1.14"
 description = "Mach-O header analysis and editing"
@@ -264,24 +277,6 @@ python-versions = ">=3.6.0"
 
 [package.dependencies]
 future = "*"
-
-[package.source]
-type = "legacy"
-url = "https://mirrors.cloud.tencent.com/pypi/simple"
-reference = "ten"
-
-[[package]]
-name = "picamera"
-version = "1.13"
-description = "A pure Python interface for the Raspberry Pi camera module."
-category = "main"
-optional = false
-python-versions = "*"
-
-[package.extras]
-test = ["coverage", "pytest", "mock", "pillow", "numpy"]
-doc = ["sphinx"]
-array = ["numpy"]
 
 [package.source]
 type = "legacy"
@@ -522,7 +517,7 @@ reference = "ten"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "fe09974b0ff5615dd37883ed1a42ca8213b61049905851ab9ca9664a70e72b36"
+content-hash = "ae31c36a8c549cd2e964ed9c7b9a6e5e5cf3236840e3bf1f68bcf10ecd689965"
 
 [metadata.files]
 altgraph = [
@@ -612,6 +607,10 @@ kivy = [
 kivy-garden = [
     {file = "kivy-garden-0.1.4.tar.gz", hash = "sha256:c256f42788421273a08fbb0a228f0fb0e80dd86b629fb8c0920507f645be6c72"},
 ]
+kivyontop = [
+    {file = "KivyOnTop-1.4-py3-none-any.whl", hash = "sha256:ba0472adc1c40c1507f426be2262130a8dc57a16f3f25575891fb80b054d785f"},
+    {file = "KivyOnTop-1.4.tar.gz", hash = "sha256:7d10f964739d063bea521938d1d32e39d2d86fe3e988ac3e466b929e2cce226d"},
+]
 macholib = [
     {file = "macholib-1.14-py2.py3-none-any.whl", hash = "sha256:c500f02867515e6c60a27875b408920d18332ddf96b4035ef03beddd782d4281"},
     {file = "macholib-1.14.tar.gz", hash = "sha256:0c436bc847e7b1d9bda0560351bf76d7caf930fb585a828d13608839ef42c432"},
@@ -626,9 +625,6 @@ packaging = [
 ]
 pefile = [
     {file = "pefile-2021.5.24.tar.gz", hash = "sha256:ed79b2353daa58421459abf4d685953bde0adf9f6e188944f97ba9795f100246"},
-]
-picamera = [
-    {file = "picamera-1.13.tar.gz", hash = "sha256:890815aa01e4d855a6a95dd3ad0953b872a6b954982106407df0c5a31a163e50"},
 ]
 pluggy = [
     {file = "pluggy-0.13.1-py2.py3-none-any.whl", hash = "sha256:966c145cd83c96502c3c3868f50408687b38434af77734af1e9ca461a4081d2d"},

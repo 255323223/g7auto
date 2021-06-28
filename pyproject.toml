@@ -8,6 +8,7 @@ authors = ["coolxv <coolxv_6533@qq.com>"]
 python = "^3.9"
 selenium = "^3.141"
 Kivy = "^2.0"
+kivyontop = "^1.4"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
