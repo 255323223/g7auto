@@ -23,7 +23,7 @@ a = Analysis([f'{cwd}/g7auto/g7ui.py'],
             win_private_assemblies=False,
             cipher=block_cipher,
             excludes = excludekivy,
-			noarchive=False)
+	    noarchive=False)
 
     
 pyz = PYZ(a.pure, a.zipped_data,
@@ -35,7 +35,7 @@ exe = EXE(pyz,
         a.zipfiles,
         a.datas,
         *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
-        name='g7auto',
+        name='G7Auto',
         debug=False,
         strip=False,
         upx=True,
@@ -48,4 +48,4 @@ coll = COLLECT(exe, Tree(f'{cwd}/g7auto/'),
                *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
                strip=False,
                upx=True,
-               name='g7auto')
+               name='G7Autop')

@@ -48,12 +48,13 @@ class AutoExe():
 
   
   def run(self):
-    self.driver.implicitly_wait(5) # seconds
+    self.driver.implicitly_wait(2) # seconds
     self.driver.get("http://deppon-g7s.co.huoyunren.com/#home.html")
     self.driver.maximize_window()
+    #self.driver.fullscreen_window()
     try:
       if not self.running: return
-      element = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.XPATH, "//*[@id='left-panel']/nav/ul/li[1]/a")))
+      element = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='left-panel']/nav/ul/li[1]/a")))
     except TimeoutException:
       self.driver.find_element(By.ID, "username").click()
       self.driver.find_element(By.ID, "username").send_keys("DP_dlyy127")
@@ -76,7 +77,7 @@ class AutoExe():
     except:
       pass
     finally:
-      time.sleep(2)
+      time.sleep(1)
       self.driver.switch_to.window(self.driver.window_handles[1]) 
     # 选择中高风险
     try:
@@ -86,18 +87,22 @@ class AutoExe():
         print("选择中高风险")  
     while self.running: 
       while self.running: 
-        # 进行查询 
+        try:
+          webdriver.ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
+        except:
+          print("esc")
+        # 隐藏侧边栏 
         try:
           if not self.running: return
           self.driver.find_element(By.XPATH, "//*[@id='content']/div[3]/div/div[1]/span[3]/i").click()
-          #time.sleep(2)
+          #time.sleep(1)
         except:
           print("隐藏侧边栏")
         # 进行查询 
         try:
           if not self.running: return
           self.driver.find_element(By.XPATH, "//*[@id='content']/div[2]/div[1]/button/span").click()
-          time.sleep(2)
+          time.sleep(1)
         except:
           print("点击查询")
           break
@@ -105,7 +110,7 @@ class AutoExe():
         try:
           if not self.running: return
           self.driver.find_element(By.XPATH, "//*[@id='listBody']/div[3]/div[1]").click()
-          time.sleep(2)
+          time.sleep(1)
         except:
           print("点击第一项")
           break
@@ -116,7 +121,7 @@ class AutoExe():
           element_to_hover_over = self.driver.find_element(By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]")
           hover = ActionChains(self.driver).move_to_element(element_to_hover_over).click(element_to_hover_over)
           hover.perform()
-          time.sleep(2)
+          time.sleep(1)
         except:
           print("点击通知")
           continue
@@ -125,7 +130,7 @@ class AutoExe():
           #人工电话
           if not self.running: return
           self.driver.find_element(By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]/div/div[2]/div/div[2]/div/div/div/p[1]/span").click()
-          time.sleep(2)
+          time.sleep(1)
         except:
           print("点击人工电话")
           continue
@@ -133,9 +138,10 @@ class AutoExe():
         try:
           # 选择干预原因
           if not self.running: return
-          num = random.randint(1,15)
+          nlist = [2,6,7,8,9,10,11,12,13,15]
+          num = nlist[random.randint(0,9)]
           self.driver.find_element(By.XPATH, f"//*[@id='content']/div[12]/div[2]/div/div[1]/div[2]/div/div[3]/div/span[{num}]").click()
-          time.sleep(1)
+          #time.sleep(1)
         except:
           print("选择干预原因")
           continue
