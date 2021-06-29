@@ -12,11 +12,21 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, NoSuchWindowException,WebDriverException
 from selenium.webdriver.common.action_chains import ActionChains
 
 import os 
 os.environ['KIVY_IMAGE'] = 'pil,sdl2'
+# config
+from kivy.config import Config
+Config.set('graphics', 'shaped', 1)
+# Config.set('kivy', 'keyboard_mode', 'systemandmulti')
+# Config.set('graphics','resizable',False) 
+#Config.set('graphics', 'fullscreen', 'fake')
+# Config.set('graphics', 'position', 'custom') 
+# Config.set('graphics', 'top', '100') 
+# Config.set('graphics', 'left', '100') 
+
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.lang import Builder
@@ -25,17 +35,19 @@ from kivy.uix.screenmanager import ScreenManager
 from kivy.config import Config
 from kivy.uix.floatlayout import FloatLayout
 from kivy.core.window import Window
+from kivy.clock import Clock
+from kivy.properties import (
+    BooleanProperty,
+    StringProperty,
+    ListProperty,
+)
 from KivyOnTop import register_topmost, unregister_topmost
 
-# config
-from kivy.config import Config
-# Config.set('kivy', 'keyboard_mode', 'systemandmulti')
-# Config.set('graphics','resizable',False) 
-# Config.set('graphics', 'fullscreen', 'fake')
-# Config.set('graphics', 'position', 'custom') 
-# Config.set('graphics', 'top', '100') 
-# Config.set('graphics', 'left', '100') 
-
+from kivy.resources import resource_find
+default_shape = Config.get('kivy', 'window_shape')
+alpha_shape = resource_find(
+    'bg.png'
+)
 
 
 class AutoExe():
@@ -60,10 +72,15 @@ class AutoExe():
       app.root.current = 'start'
   def run_inter(self,app):
     print(app)
-    self.driver.implicitly_wait(2) # seconds
-    self.driver.get("http://deppon-g7s.co.huoyunren.com/#home.html")
-    self.driver.maximize_window()
-    #self.driver.fullscreen_window()
+    try:
+      self.driver.implicitly_wait(2) # seconds
+      self.driver.get("http://deppon-g7s.co.huoyunren.com/#home.html")
+      self.driver.maximize_window()
+      #self.driver.fullscreen_window()
+    except NoSuchWindowException:
+      return
+    except WebDriverException:
+      return
     try:
       if not self.running: return
       element = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='left-panel']/nav/ul/li[1]/a")))
@@ -210,20 +227,33 @@ def shutdown_task(tui):
 ###   UI
 ####################################################
 Builder.load_string('''
+<RoundedButton@Button>:
+    size_hint: (None, None)
+    size: (120, 120)
+    background_color: 0,0,0,0  # the last zero is the critical on, make invisible
+    canvas.before:
+        Color:
+            rgba: (.4,.4,.4,1) if self.state=='normal' else (0,.7,.7,1)  # visual feedback of press
+        RoundedRectangle:
+            pos: (self.center_x - 60, self.center_y - 60)
+            size: self.size
+            radius: [60,]
+    text:'<--Back'
+
 <ScreenManager>:
     StartScreen
     StopScreen
 
 <StartScreen>:
     name: 'start'
-    Button:
+    RoundedButton:
         text: 'Start'
         font_size: '50sp'
         on_release: root.manager.current = 'stop';root.do_start(app)
 
 <StopScreen>:
     name: 'stop'
-    Button:
+    RoundedButton:
         text: "Stop"
         font_size: '50sp'
         on_release: root.manager.current = 'start';root.do_stop(root.manager.get_screen("start"))
@@ -247,22 +277,43 @@ class StopScreen(Screen):
     print('stop')
 
 class TestApp(App):
+  shape_image = StringProperty('', force_dispatch=True)
+  def set_shape(self, *args):
+    print(alpha_shape)
+    print(Window.size)
+    print(Window.shaped)
+  def on_shape_image(self, instance, value):
+    print(Window.shaped)
+    #Window.size = (120, 120)
+    Window.size = (800, 600)
+    Window.shape_image = self.alpha_shape
+    Window.shape_mode = 'colorkey'
+    Window.shape_color_key = [0,0,0,1]
+
+
   def on_stop(self, *args):
     self.root.get_screen("stop").do_stop(self.root.get_screen("start"))
     #print(self.root.screens)
   def on_start(self, *args):
     title = 'G7Auto'
     Window.set_title(title)
-    Window.size = (300, 150)
+    #Window.size = (120, 120)
+    Window.size = (800, 600)
     Window.left = 50
     Window.top = 50
-    #Window.borderless = True 
+    Window.borderless = True 
+
+    #Window.shape_mode = 'default'
+    Window.shape_image = default_shape
+    Window.shape_mode = 'colorkey'
+    Window.shape_color_key = [1,1,1,1]
     # Register top-most
     register_topmost(Window, title)
     # Unregister top-most (not necessary, only an example)
     self.bind(on_stop=lambda *args, w=Window, t=title: unregister_topmost(w, t))
   def build(self):
     #self.title = 'g7auto'
+    self.alpha_shape = alpha_shape
     return ScreenManager()
 
 def main():
