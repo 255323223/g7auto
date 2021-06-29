@@ -29,7 +29,14 @@ from KivyOnTop import register_topmost, unregister_topmost
 
 # config
 from kivy.config import Config
-Config.set('kivy', 'keyboard_mode', 'systemandmulti')
+# Config.set('kivy', 'keyboard_mode', 'systemandmulti')
+# Config.set('graphics','resizable',False) 
+# Config.set('graphics', 'fullscreen', 'fake')
+# Config.set('graphics', 'position', 'custom') 
+# Config.set('graphics', 'top', '100') 
+# Config.set('graphics', 'left', '100') 
+
+
 
 class AutoExe():
   def setup_method(self):
@@ -45,9 +52,14 @@ class AutoExe():
   
   def wait_for_window(self, timeout = 5):
     time.sleep(timeout)
-
-  
-  def run(self):
+  def run(self,app):
+    try:
+      self.run_inter(app)
+    finally:
+      #print(app.root.screens)
+      app.root.current = 'start'
+  def run_inter(self,app):
+    print(app)
     self.driver.implicitly_wait(2) # seconds
     self.driver.get("http://deppon-g7s.co.huoyunren.com/#home.html")
     self.driver.maximize_window()
@@ -179,11 +191,11 @@ class AutoExe():
 ###   auto task
 ####################################################
 tui = {}
-def run_task():
+def run_task(app):
   # Create and launch a thread
   ae = AutoExe()
   ae.setup_method()
-  t = Thread(target=ae.run, args=())
+  t = Thread(target=ae.run, args=(app,))
   t.start()
   return {"t": t,"ae" : ae}
 
@@ -207,7 +219,7 @@ Builder.load_string('''
     Button:
         text: 'Start'
         font_size: '50sp'
-        on_release: root.manager.current = 'stop';root.do_start()
+        on_release: root.manager.current = 'stop';root.do_start(app)
 
 <StopScreen>:
     name: 'stop'
@@ -222,28 +234,31 @@ class ScreenManager(ScreenManager):
     pass
 
 class StartScreen(Screen):
-  def do_start(self):
-    self.tui = run_task()
+  def do_start(self,app):
+    self.tui = run_task(app)
     print('start')
-
-    pass
 
 class StopScreen(Screen):
   def do_stop(self, scn):
-    print(scn.tui)
-    shutdown_task(scn.tui)
+    if hasattr(scn, 'tui'):
+      print(scn.tui)
+      shutdown_task(scn.tui)
+      scn.tui = {}
     print('stop')
-    scn.tui = {}
-    pass
 
 class TestApp(App):
+  def on_stop(self, *args):
+    self.root.get_screen("stop").do_stop(self.root.get_screen("start"))
+    #print(self.root.screens)
   def on_start(self, *args):
     title = 'G7Auto'
     Window.set_title(title)
-
+    Window.size = (300, 150)
+    Window.left = 50
+    Window.top = 50
+    #Window.borderless = True 
     # Register top-most
     register_topmost(Window, title)
-
     # Unregister top-most (not necessary, only an example)
     self.bind(on_stop=lambda *args, w=Window, t=title: unregister_topmost(w, t))
   def build(self):
@@ -251,9 +266,9 @@ class TestApp(App):
     return ScreenManager()
 
 def main():
-  Config.set('graphics','resizable',False) 
-  Window.size = (300, 150)
-  TestApp().run()
+
+  app = TestApp()
+  app.run()
 
 if __name__ == "__main__":
     main()
