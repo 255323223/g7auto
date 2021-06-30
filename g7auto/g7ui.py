@@ -46,7 +46,9 @@ from kivy.properties import (
 )
 from KivyOnTop import register_topmost, unregister_topmost
 
-from kivy.resources import resource_find
+from kivy.resources import resource_find,resource_add_path
+cwd = os.getcwd().replace("\\", "/")
+resource_add_path(f'{cwd}/g7auto/data/')
 default_shape = Config.get('kivy', 'window_shape')
 alpha_shape = resource_find(
     'bg.png'
@@ -97,7 +99,7 @@ class AutoExe():
       self.driver.find_element(By.ID, "passwd").click()
       self.driver.find_element(By.ID, "passwd").send_keys("DP_dlyy127")
       self.driver.find_element(By.ID, "form_button").click()
-      time.sleep(2)
+      time.sleep(3)
     # 去除指引
     try:
       if not self.running: return
@@ -113,7 +115,7 @@ class AutoExe():
     except:
       pass
     finally:
-      time.sleep(1)
+      time.sleep(3)
       self.driver.switch_to.window(self.driver.window_handles[1]) 
     # 选择中高风险
     try:
@@ -344,4 +346,6 @@ def main():
   app.run()
 
 if __name__ == "__main__":
-    main()
+  #cwd = os.getcwd().replace("\\", "/")
+  #print(cwd)
+  main()

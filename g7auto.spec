@@ -11,12 +11,12 @@ block_cipher = None
 
 excludekivy = get_deps_minimal(video=None, audio=None,spelling=None,camera=None)['excludes']
 
-data = (f'{cwd}/g7auto/bg.png', '.') 
+data = (f'{cwd}/g7auto/data/bg.png', 'data') 
 
 a = Analysis([f'{cwd}/g7auto/g7ui.py'],
             pathex=[f'{cwd}/g7auto/'],
             binaries=[],
-            datas=[ data ],
+            datas=[data],
             hiddenimports=['six','packaging','packaging.version','packaging.specifiers','configparser'], #collect_submodules('kivy.garden'),
             hookspath=[],
             runtime_hooks=[],
@@ -29,19 +29,22 @@ a = Analysis([f'{cwd}/g7auto/g7ui.py'],
     
 pyz = PYZ(a.pure, a.zipped_data,
             cipher=block_cipher)
-    
-exe = EXE(pyz,
+
+
+exe = EXE(pyz,Tree(f'{cwd}/g7auto/'),
         a.scripts,
         a.binaries,
         a.zipfiles,
         a.datas,
         *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
+        icon='icon.ico',
         name='G7Auto',
         debug=False,
         strip=False,
         upx=True,
         console=False )
-		
+
+	
 coll = COLLECT(exe, Tree(f'{cwd}/g7auto/'),
                a.binaries,
                a.zipfiles,
