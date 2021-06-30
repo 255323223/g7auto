@@ -9,6 +9,7 @@ python = "^3.9"
 selenium = "^3.141"
 Kivy = "^2.0"
 kivyontop = "^1.4"
+pyautogui = "^0.9.52"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
