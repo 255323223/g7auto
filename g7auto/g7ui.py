@@ -51,7 +51,8 @@ from KivyOnTop import register_topmost, unregister_topmost
 
 from kivy.resources import resource_find,resource_add_path
 cwd = os.getcwd().replace("\\", "/")
-resource_add_path(f'{cwd}/g7auto/data/')
+print(cwd)
+resource_add_path(f'{cwd}/data/')
 default_shape = Config.get('kivy', 'window_shape')
 alpha_shape = resource_find(
     'bg.png'
@@ -182,8 +183,15 @@ class AutoExe():
       # 通知，mouse hover
       try:
         if not self.running: return
+        WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[3]/div/div[1]/span[3]/i")))
+      except TimeoutException:
+        print("无侧边栏")
+        continue
+      try:
+        if not self.running: return
         WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]")))
       except TimeoutException:
+        print("无通知")
         continue
       try:
         #if not self.running: return
