@@ -20,12 +20,15 @@ os.environ['KIVY_IMAGE'] = 'pil,sdl2'
 # config
 from kivy.config import Config
 Config.set('graphics', 'shaped', 1)
+Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 # Config.set('kivy', 'keyboard_mode', 'systemandmulti')
 # Config.set('graphics','resizable',False) 
 #Config.set('graphics', 'fullscreen', 'fake')
 # Config.set('graphics', 'position', 'custom') 
 # Config.set('graphics', 'top', '100') 
 # Config.set('graphics', 'left', '100') 
+Config.set('graphics', 'width', '60') 
+Config.set('graphics', 'height', '60') 
 
 from kivy.app import App
 from kivy.uix.button import Button
@@ -67,6 +70,10 @@ class AutoExe():
   def run(self,app):
     try:
       self.run_inter(app)
+    except NoSuchWindowException:
+      print("run_inter NoSuchWindowException")
+    except WebDriverException:
+      print("run_inter WebDriverException")
     finally:
       #print(app.root.screens)
       app.root.current = 'start'
@@ -229,16 +236,16 @@ def shutdown_task(tui):
 Builder.load_string('''
 <RoundedButton@Button>:
     size_hint: (None, None)
-    size: (120, 120)
-    background_color: 0,0,0,0  # the last zero is the critical on, make invisible
+    size: (60, 60)
+    background_color: 1,0,0,0  # the last zero is the critical on, make invisible
     canvas.before:
         Color:
             rgba: (.4,.4,.4,1) if self.state=='normal' else (0,.7,.7,1)  # visual feedback of press
         RoundedRectangle:
-            pos: (self.center_x - 60, self.center_y - 60)
+            pos: (self.center_x - 30, self.center_y - 30)
             size: self.size
-            radius: [60,]
-    text:'<--Back'
+            radius: [30,]
+    text:''
 
 <ScreenManager>:
     StartScreen
@@ -246,16 +253,24 @@ Builder.load_string('''
 
 <StartScreen>:
     name: 'start'
-    RoundedButton:
-        text: 'Start'
+    Button:
+        id: br
+        text: 'R'
+        bold: True
         font_size: '50sp'
+        color: 1,0,0,1
+        background_color: 1,0,0,1
         on_release: root.manager.current = 'stop';root.do_start(app)
 
 <StopScreen>:
     name: 'stop'
-    RoundedButton:
-        text: "Stop"
+    Button:
+        id: bs
+        text: "S"
+        bold: True
         font_size: '50sp'
+        color: 0,1,0,1
+        background_color: 0,1,0,1
         on_release: root.manager.current = 'start';root.do_stop(root.manager.get_screen("start"))
 ''')
 
@@ -264,9 +279,13 @@ class ScreenManager(ScreenManager):
     pass
 
 class StartScreen(Screen):
+  # def on_pre_enter(self):
+  #   Window.bind(mouse_pos=self.on_mouse_pos)
   def do_start(self,app):
     self.tui = run_task(app)
     print('start')
+  # def on_mouse_pos(self, window, pos):
+  #   print(window,pos)
 
 class StopScreen(Screen):
   def do_stop(self, scn):
@@ -277,19 +296,7 @@ class StopScreen(Screen):
     print('stop')
 
 class TestApp(App):
-  shape_image = StringProperty('', force_dispatch=True)
-  def set_shape(self, *args):
-    print(alpha_shape)
-    print(Window.size)
-    print(Window.shaped)
-  def on_shape_image(self, instance, value):
-    print(Window.shaped)
-    #Window.size = (120, 120)
-    Window.size = (800, 600)
-    Window.shape_image = self.alpha_shape
-    Window.shape_mode = 'colorkey'
-    Window.shape_color_key = [0,0,0,1]
-
+  #shape_image = StringProperty('', force_dispatch=True)
 
   def on_stop(self, *args):
     self.root.get_screen("stop").do_stop(self.root.get_screen("start"))
@@ -297,23 +304,38 @@ class TestApp(App):
   def on_start(self, *args):
     title = 'G7Auto'
     Window.set_title(title)
-    #Window.size = (120, 120)
-    Window.size = (800, 600)
-    Window.left = 50
-    Window.top = 50
+    #Window.size = (256, 256)
+    Window.left = 0
+    Window.top = 0
     Window.borderless = True 
 
     #Window.shape_mode = 'default'
-    Window.shape_image = default_shape
+    Window.shape_image = alpha_shape
     Window.shape_mode = 'colorkey'
-    Window.shape_color_key = [1,1,1,1]
+    Window.shape_color_key = [0,0,0,1]
     # Register top-most
     register_topmost(Window, title)
     # Unregister top-most (not necessary, only an example)
     self.bind(on_stop=lambda *args, w=Window, t=title: unregister_topmost(w, t))
+    #move window
+    #Window.bind(mouse_pos=self.on_mouse_pos)
+    Window.bind(on_key_down=self.on_key_action)
+  def on_mouse_pos(self, window, pos):
+    print(self.root.get_screen("start").ids.br.state)
+    if self.root.get_screen("start").ids.br.state == "down":
+      Window.left, Window.top = pos
+  def on_key_action(self, t1,t2,t3,key,t4):
+    print(key)
+    if key == 'a':
+      Window.left = Window.left - 10
+    elif key == 'd':
+      Window.left = Window.left + 10  
+    elif key == 'w':
+      Window.top = Window.top - 10   
+    elif key == 's':
+      Window.top = Window.top + 10   
+
   def build(self):
-    #self.title = 'g7auto'
-    self.alpha_shape = alpha_shape
     return ScreenManager()
 
 def main():

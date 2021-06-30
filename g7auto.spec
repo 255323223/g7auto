@@ -11,11 +11,12 @@ block_cipher = None
 
 excludekivy = get_deps_minimal(video=None, audio=None,spelling=None,camera=None)['excludes']
 
-print(cwd)
+data = (f'{cwd}/g7auto/bg.png', '.') 
 
 a = Analysis([f'{cwd}/g7auto/g7ui.py'],
             pathex=[f'{cwd}/g7auto/'],
             binaries=[],
+            datas=[ data ],
             hiddenimports=['six','packaging','packaging.version','packaging.specifiers','configparser'], #collect_submodules('kivy.garden'),
             hookspath=[],
             runtime_hooks=[],
