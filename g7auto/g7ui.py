@@ -4,6 +4,13 @@ import json
 import os
 import random
 from threading import Thread
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(message)s')
+logger = logging.getLogger()
+logger.addHandler(logging.FileHandler('G7Auto.log', 'w'))
+printF = logger.info
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -15,10 +22,11 @@ from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException, NoSuchWindowException,WebDriverException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
+# from selenium.webdriver.chrome.service import Service
+# from subprocess import CREATE_NO_WINDOW
 
 import pyautogui
 
-import os 
 os.environ['KIVY_IMAGE'] = 'pil,sdl2'
 # config
 from kivy.config import Config
@@ -51,7 +59,7 @@ from KivyOnTop import register_topmost, unregister_topmost
 
 from kivy.resources import resource_find,resource_add_path
 cwd = os.getcwd().replace("\\", "/")
-print(cwd)
+printF(cwd)
 resource_add_path(f'{cwd}/data/')
 default_shape = Config.get('kivy', 'window_shape')
 alpha_shape = resource_find(
@@ -59,14 +67,24 @@ alpha_shape = resource_find(
 )
 
 
+
 class AutoExe():
   def setup_method(self):
     #设置chrome浏览器无界面模式
     options = webdriver.ChromeOptions()
-    #options.add_argument('--headless')
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--start-maximized")
+    options.add_argument("--headless")
+    options.add_argument('--disable-gpu')
+    # options.add_argument('--remote-debugging-port=9222')
+    # service = Service('chromedriver')
+    # service.creationflags = CREATE_NO_WINDOW
+    # self.driver = webdriver.Chrome(options=options, service_args=service)  # version 4 
+
     self.driver = webdriver.Chrome(options=options)
     self.vars = {}
     self.running = True
+    self.count = 0
 
   def stop(self):
     self.running = False
@@ -80,16 +98,16 @@ class AutoExe():
     try:
       self.run_inter(app)
     except NoSuchWindowException:
-      print("run_inter NoSuchWindowException")
+      printF("run_inter NoSuchWindowException")
     except WebDriverException:
-      print("run_inter WebDriverException")
+      printF("run_inter WebDriverException")
     finally:
       #print(app.root.screens)
       app.root.current = 'start'
   def run_inter(self,app):
     #print(app)
     try:
-      self.driver.implicitly_wait(1) # seconds
+      self.driver.implicitly_wait(2) # seconds
       self.driver.get("http://deppon-g7s.co.huoyunren.com/#home.html")
       self.driver.maximize_window()
       #self.driver.fullscreen_window()
@@ -106,6 +124,7 @@ class AutoExe():
       self.driver.find_element(By.ID, "passwd").click()
       self.driver.find_element(By.ID, "passwd").send_keys("DP_dlyy127")
       self.driver.find_element(By.ID, "form_button").click()
+      printF("登录")
     try:
       if not self.running: return
       element = WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.XPATH, "//*[@id='left-panel']/nav/ul/li[4]/a/span")))
@@ -130,76 +149,89 @@ class AutoExe():
       try:
         element = WebDriverWait(self.driver, 10).until(EC.new_window_is_opened(cur_handles))
       except TimeoutException:
-        print("timeout")
+        printF("失败，等待新窗口")
         return
-      self.driver.switch_to.window(self.driver.window_handles[-1]) 
+      try:
+        time.sleep(2)
+        self.driver.switch_to.window(self.driver.window_handles[-1]) 
+        printF("打开实时风险看板")
+      except:
+        printF("失败，打开新窗口") 
     # 选择中高风险
+    try:
+      element = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[2]/div[1]/div[1]/div/label[3]/span")))
+    except TimeoutException:
+      printF("失败，等待中高风险")
+      return
     try:
       if not self.running: return
       self.driver.find_element(By.XPATH, "//*[@id='content']/div[2]/div[1]/div[1]/div/label[3]/span").click()
-      time.sleep(1)
+      time.sleep(2)
     except:
-        print("选择中高风险")  
+        printF("失败，选择中高风险")  
+        return
     while self.running:
       # 发送ESC按键
       try:
         webdriver.ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
       except:
-        print("发送ESC按键")
+        printF("发送ESC按键")
       # 隐藏侧边栏 
       try:
         if not self.running: return
         self.driver.find_element(By.XPATH, "//*[@id='content']/div[3]/div/div[1]/span[3]/i").click()
       except:
-        print("隐藏侧边栏")
+        pass
+        #printF("隐藏侧边栏")
       # 进行查询 
       try:
         if not self.running: return
         WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[2]/div[1]/button/span")))
         time.sleep(1)
       except TimeoutException:
-        print("无查询按钮")
+        printF("失败，无查询按钮")
         continue
       try:
         if not self.running: return
         self.driver.find_element(By.XPATH, "//*[@id='content']/div[2]/div[1]/button/span").click()
+        time.sleep(1)
       except:
-        print("点击查询")
+        printF("失败，点击查询")
         continue
       # 点击第一项 
       try:
         if not self.running: return
         WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='listBody']/div[3]/div[1]")))
-        time.sleep(1)
       except TimeoutException:
-        print("无数据")
+        printF("无数据")
         continue
       try:
         if not self.running: return
         self.driver.find_element(By.XPATH, "//*[@id='listBody']/div[3]/div[1]").click()
       except:
-        print("点击第一项")
+        printF("失败，点击第一项")
         continue
       # 通知，mouse hover
       try:
         if not self.running: return
-        WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[3]/div/div[1]/span[3]/i")))
+        WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[3]/div/div[1]/span[3]/i")))
       except TimeoutException:
-        print("无侧边栏")
+        printF("失败，无侧边栏")
         continue
       try:
         if not self.running: return
         WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]")))
       except TimeoutException:
-        print("无通知")
+        printF("失败，无通知")
         continue
       try:
         #if not self.running: return
         element_to_hover_over = self.driver.find_element(By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]")
         hover = ActionChains(self.driver).move_to_element(element_to_hover_over).click(element_to_hover_over)
         hover.perform()
+        time.sleep(1)
       except:
-        print("点击通知")
+        printF("失败，点击通知")
         continue
       # 选择人工电话
       try:
@@ -212,7 +244,7 @@ class AutoExe():
         if not self.running: return
         self.driver.find_element(By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]/div/div[2]/div/div[2]/div/div/div/p[1]/span").click()
       except:
-        print("点击人工电话")
+        printF("失败，点击人工电话")
         continue
       # 干预
       try:
@@ -229,24 +261,26 @@ class AutoExe():
         num = nlist[random.randint(0,9)]
         self.driver.find_element(By.XPATH, f"//*[@id='content']/div[12]/div[2]/div/div[1]/div[2]/div/div[3]/div/span[{num}]").click()
       except:
-        print("选择干预原因")
+        printF("失败，选择干预原因")
         continue
       # 干预
       try:
         # 已接通并干预
         if not self.running: return
-        time.sleep(0.5)
+        time.sleep(1)
         self.driver.find_element(By.XPATH, "//*[@id='content']/div[12]/div[2]/div/div[1]/div[2]/div/div[4]/div/span[1]").click()
       except:
-        print("已接通并干预")
+        printF("失败，已接通并干预")
         continue
       # 保存
       try:
         if not self.running: return
         self.driver.find_element(By.XPATH, "//*[@id='content']/div[12]/div[2]/div/div[1]/div[3]/div/button/span").click()
+        self.count = self.count + 1
+        printF(f"已经完成任务:{self.count}")
         time.sleep(3)
       except:
-        print("保存")
+        printF("失败，保存")
         continue
 
 
@@ -263,7 +297,7 @@ def run_task(app):
   return {"t": t,"ae" : ae}
 
 def shutdown_task(tui):
-  print(tui)
+  #print(tui)
   tui["ae"].stop()
   tui["t"].join()
   tui["ae"].teardown_method()
@@ -321,20 +355,20 @@ class StartScreen(Screen):
   # def on_pre_enter(self):
   #   Window.bind(mouse_pos=self.on_mouse_pos)
   def do_start(self,app,mst = 0):
-    print(mst)
+    #print(mst)
     self.tui = run_task(app)
-    print('start')
+    printF('开始自动化任务')
   # def on_mouse_pos(self, window, pos):
   #   print(window,pos)
 
 class StopScreen(Screen):
   def do_stop(self, scn, mst = 0):
-    print(mst)
+    #print(mst)
     if hasattr(scn, 'tui') and scn.tui:
-      print(scn.tui)
+      #print(scn.tui)
       shutdown_task(scn.tui)
       scn.tui = {}
-    print('stop')
+    printF('停止自动化任务')
 
 class TestApp(App):
   #shape_image = StringProperty('', force_dispatch=True)
@@ -369,7 +403,7 @@ class TestApp(App):
     else:
       pass
   def on_key_action(self, t1,t2,t3,key,t4):
-    print(t1,t2,t3,key,t4)
+    #print(t1,t2,t3,key,t4)
     if key == 'a' or t3 == 80:
       Window.left = Window.left - 10
     elif key == 'd' or t3 == 79:
@@ -389,5 +423,5 @@ def main():
 
 if __name__ == "__main__":
   #cwd = os.getcwd().replace("\\", "/")
-  #print(cwd)
+  #printF(cwd)
   main()
