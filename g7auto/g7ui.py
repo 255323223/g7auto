@@ -89,7 +89,7 @@ class AutoExe():
     # service.creationflags = CREATE_NO_WINDOW
     # self.driver = webdriver.Chrome(options=options, service_args=service)  # version 4 
 
-    self.driver = webdriver.Chrome(options=options)
+    self.driver = webdriver.Chrome(executable_path= f'{cwd}/chromedriver.exe',options=options)
     self.vars = {}
     self.running = True
     self.count = 0
@@ -232,28 +232,33 @@ class AutoExe():
       except TimeoutException:
         printF("失败，无通知")
         continue
-      try:
-        #if not self.running: return
-        element_to_hover_over = self.driver.find_element(By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]")
-        hover = ActionChains(self.driver).move_to_element(element_to_hover_over).click(element_to_hover_over)
-        hover.perform()
-        time.sleep(1)
-      except:
-        printF("失败，点击通知")
-        continue
-      # 选择人工电话
-      try:
-        if not self.running: return
-        WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]/div/div[2]/div/div[2]/div/div/div/p[1]/span")))
-      except TimeoutException:
-        continue
-      try:
-        #人工电话
-        if not self.running: return
-        self.driver.find_element(By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]/div/div[2]/div/div[2]/div/div/div/p[1]/span").click()
-      except:
-        printF("失败，点击人工电话")
-        continue
+      num = 3
+      while num != 0:
+        num-=1
+        try:
+          #if not self.running: return
+          element_to_hover_over = self.driver.find_element(By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]")
+          hover = ActionChains(self.driver).move_to_element(element_to_hover_over).click(element_to_hover_over).click(element_to_hover_over)
+          hover.perform()
+          time.sleep(0.5)
+        except:
+          printF("失败，点击通知")
+          continue
+        # 选择人工电话
+        try:
+          if not self.running: return
+          WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]/div/div[2]/div/div[2]/div/div/div/p[1]/span")))
+        except TimeoutException:
+          printF("失败，等待人工电话")
+          continue
+        try:
+          #人工电话
+          if not self.running: return
+          self.driver.find_element(By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]/div/div[2]/div/div[2]/div/div/div/p[1]/span").click()
+        except:
+          printF("失败，点击人工电话")
+          continue
+        break #while end  
       # 干预
       try:
         if not self.running: return
@@ -275,7 +280,7 @@ class AutoExe():
       try:
         # 已接通并干预
         if not self.running: return
-        time.sleep(1)
+        time.sleep(0.5)
         self.driver.find_element(By.XPATH, "//*[@id='content']/div[12]/div[2]/div/div[1]/div[2]/div/div[4]/div/span[1]").click()
       except:
         printF("失败，已接通并干预")
