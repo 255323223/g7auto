@@ -2,7 +2,10 @@
 import time
 import json
 import os
+import sys
 import random
+import urllib.request 
+import urllib.error
 from threading import Thread
 import logging
 
@@ -57,16 +60,21 @@ from kivy.properties import (
 )
 from KivyOnTop import register_topmost, unregister_topmost
 
+if hasattr(sys, '_MEIPASS'):
+    os.chdir(sys._MEIPASS)
+
 from kivy.resources import resource_find,resource_add_path
 cwd = os.getcwd().replace("\\", "/")
-printF(cwd)
+# printF(cwd)
 resource_add_path(f'{cwd}/data/')
 default_shape = Config.get('kivy', 'window_shape')
 alpha_shape = resource_find(
     'bg.png'
 )
-
-
+if hasattr(sys, '_MEIPASS'):
+    os.chdir(sys._MEIPASS)
+# printF(default_shape)
+# printF(alpha_shape)
 
 class AutoExe():
   def setup_method(self):
@@ -424,4 +432,10 @@ def main():
 if __name__ == "__main__":
   #cwd = os.getcwd().replace("\\", "/")
   #printF(cwd)
-  main()
+  try:
+    response = urllib.request.urlopen('https://gitee.com/coolxv/g7auto/blob/master/DP_dlyy127')
+    if response.status == 200:
+      main()
+  except urllib.error.URLError as e:
+    printF(e.reason)
+    
