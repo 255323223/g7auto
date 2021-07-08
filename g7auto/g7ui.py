@@ -9,10 +9,15 @@ import urllib.error
 from threading import Thread
 import logging
 
-logging.basicConfig(level=logging.INFO, format='%(message)s')
+#logging.basicConfig(filename= 'G7Auto.log', filemode='w', level=logging.DEBUG, format='%(asctime)s.%(msecs)03d [%(pathname)s %(filename)s:%(lineno)d] %(message)s', datefmt='## %Y-%m-%d %H:%M:%S')
+logging.basicConfig(filename= 'G7Auto.log', filemode='w', level=logging.DEBUG, format='%(asctime)s.%(msecs)03d %(message)s', datefmt='## %Y-%m-%d %H:%M:%S')
+logging.getLogger("requests").setLevel(logging.ERROR)
+logging.getLogger("urllib3").setLevel(logging.ERROR)
+logging.getLogger("kivy").setLevel(logging.ERROR)
 logger = logging.getLogger()
-logger.addHandler(logging.FileHandler('G7Auto.log', 'w'))
-printF = logger.info
+#logger.addHandler(logging.FileHandler('G7Auto.log', 'w'))
+printF = logger.debug
+
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -27,6 +32,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options
 # from selenium.webdriver.chrome.service import Service
 # from subprocess import CREATE_NO_WINDOW
+from selenium.webdriver.remote.remote_connection import LOGGER
+LOGGER.setLevel(logging.WARNING)
 
 import pyautogui
 
@@ -44,6 +51,9 @@ Config.set('input', 'mouse', 'mouse,multitouch_on_demand')
 Config.set('graphics', 'width', '60') 
 Config.set('graphics', 'height', '60') 
 
+
+from kivy.logger import Logger, LOG_LEVELS
+Logger.setLevel(LOG_LEVELS["error"])
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.lang import Builder
@@ -80,10 +90,12 @@ class AutoExe():
   def setup_method(self):
     #设置chrome浏览器无界面模式
     options = webdriver.ChromeOptions()
-    options.add_argument("--window-size=1920,1080")
+    #options.add_argument('log-level=3')
     options.add_argument("--start-maximized")
-    options.add_argument("--headless")
-    options.add_argument('--disable-gpu')
+    ##
+    # options.add_argument("--window-size=1920,1080")
+    # options.add_argument("--headless")
+    # options.add_argument('--disable-gpu')
     # options.add_argument('--remote-debugging-port=9222')
     # service = Service('chromedriver')
     # service.creationflags = CREATE_NO_WINDOW
@@ -106,26 +118,35 @@ class AutoExe():
     try:
       self.run_inter(app)
     except NoSuchWindowException:
-      printF("run_inter NoSuchWindowException")
+      printF("run NoSuchWindowException")
     except WebDriverException:
-      printF("run_inter WebDriverException")
+      printF("run WebDriverException")
+    except ConnectionResetError:
+      printF("run ConnectionResetError")
+    except ConnectionError:
+      printF("run ConnectionError")
     finally:
       #print(app.root.screens)
+      printF("停止自动化任务(被动)")
+      #app.root.get_screen("stop").do_stop(app.root.get_screen("start"))
       app.root.current = 'start'
   def run_inter(self,app):
     #print(app)
     try:
       self.driver.implicitly_wait(2) # seconds
       self.driver.get("http://deppon-g7s.co.huoyunren.com/#home.html")
-      self.driver.maximize_window()
+      time.sleep(3)
+      #self.driver.maximize_window()
       #self.driver.fullscreen_window()
     except NoSuchWindowException:
+      printF("run_inter NoSuchWindowException")
       return
     except WebDriverException:
+      printF("run_inter WebDriverException")
       return
     try:
       if not self.running: return
-      element = WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, "//*[@id='left-panel']/nav/ul/li[1]/a")))
+      element = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='left-panel']/nav/ul/li[1]/a")))
     except TimeoutException:
       self.driver.find_element(By.ID, "username").click()
       self.driver.find_element(By.ID, "username").send_keys("DP_dlyy127")
@@ -137,8 +158,14 @@ class AutoExe():
       if not self.running: return
       element = WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.XPATH, "//*[@id='left-panel']/nav/ul/li[4]/a/span")))
     except TimeoutException:
+      printF("run_inter TimeoutException 登录")
       return
     # 去除指引
+    try:
+      if not self.running: return
+      element = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[11]/div[9]")))
+    except TimeoutException:
+      pass
     try:
       if not self.running: return
       self.driver.find_element(By.XPATH, "/html/body/div[11]/div[9]").click()
@@ -149,9 +176,12 @@ class AutoExe():
       if not self.running: return
       cur_handles = self.driver.window_handles
       self.driver.find_element(By.XPATH, "//*[@id='left-panel']/nav/ul/li[4]/a/span").click()
+      time.sleep(0.5)
       self.driver.find_element(By.XPATH, "//*[@id='left-panel']/nav/ul/li[4]/ul/li[2]/a").click()
+      time.sleep(0.5)
       self.driver.find_element(By.XPATH, "//*[@id='left-panel']/nav/ul/li[4]/ul/li[2]/ul/li[1]/a").click()
     except:
+      printF("run_inter 实时风险监控台new")
       return
     finally:
       try:
@@ -300,21 +330,21 @@ class AutoExe():
 ####################################################
 ###   auto task
 ####################################################
-tui = {}
+
 def run_task(app):
   # Create and launch a thread
-  ae = AutoExe()
-  ae.setup_method()
-  t = Thread(target=ae.run, args=(app,))
-  t.start()
-  return {"t": t,"ae" : ae}
+  tui = AutoExe()
+  tui.setup_method()
+  thr = Thread(target=tui.run, args=(app,))
+  thr.start()
+  return thr, tui
 
 def shutdown_task(tui):
   #print(tui)
-  tui["ae"].stop()
-  tui["t"].join()
-  tui["ae"].teardown_method()
-  tui = {}
+  tui.stop()
+  #tui["t"].join()
+  tui.teardown_method()
+  #tui = {}
   pass
 ####################################################
 ###   UI
@@ -357,7 +387,7 @@ Builder.load_string('''
         font_size: '50sp'
         color: 0,1,0,1
         background_color: 0,1,0,1
-        on_release: root.manager.current = 'start';root.do_stop(root.manager.get_screen("start"),self.min_state_time)
+        on_release: root.manager.current = 'start'
 ''')
 
 
@@ -369,7 +399,12 @@ class StartScreen(Screen):
   #   Window.bind(mouse_pos=self.on_mouse_pos)
   def do_start(self,app,mst = 0):
     #print(mst)
-    self.tui = run_task(app)
+    if hasattr(self, 'thr'):
+      self.thr.join()
+      del self.thr
+    if hasattr(self, 'tui'):
+      del self.tui
+    self.thr, self.tui = run_task(app)
     printF('开始自动化任务')
   # def on_mouse_pos(self, window, pos):
   #   print(window,pos)
@@ -380,13 +415,14 @@ class StopScreen(Screen):
     if hasattr(scn, 'tui') and scn.tui:
       #print(scn.tui)
       shutdown_task(scn.tui)
-      scn.tui = {}
-    printF('停止自动化任务')
-
+      del scn.tui
+      printF('停止自动化任务')
+  def on_pre_leave(self):
+    self.do_stop(self.manager.get_screen("start"))
 class TestApp(App):
   #shape_image = StringProperty('', force_dispatch=True)
-
   def on_stop(self, *args):
+    printF("程序停止运行")
     self.root.get_screen("stop").do_stop(self.root.get_screen("start"))
     #print(self.root.screens)
   def on_start(self, *args):
@@ -408,6 +444,8 @@ class TestApp(App):
     #move window
     #Window.bind(mouse_pos=self.on_mouse_pos)
     Window.bind(on_key_down=self.on_key_action)
+    printF("程序开始运行")
+
   def on_mouse_pos(self, window, pos):
     #print(self.root.get_screen("start").ids.br.state)
     if self.root.get_screen("start").ids.br.state == "down":
@@ -430,7 +468,7 @@ class TestApp(App):
     return ScreenManager()
 
 def main():
-
+  #global app
   app = TestApp()
   app.run()
 
@@ -442,5 +480,5 @@ if __name__ == "__main__":
     if response.status == 200:
       main()
   except urllib.error.URLError as e:
-    printF(e.reason)
+    printF("无使用权限")
     
