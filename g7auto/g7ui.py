@@ -131,13 +131,19 @@ class AutoExe():
       printF("run ConnectionResetError")
     except ConnectionError:
       printF("run ConnectionError")
+    except Exception as e:
+      printF("run Exception")
+      printF(e)
     except:
       printF("run except")
     finally:
+      if app.root.get_screen("start").btn == False:
+        app.root.get_screen("start").restart = True
+        printF("停止自动化任务(异常)")
       #print(app.root.screens)
-      printF("停止自动化任务(被动)")
       #app.root.get_screen("stop").do_stop(app.root.get_screen("start"))
       app.root.current = 'start'
+      self.teardown_method()
   def run_inter(self,app):
     # 打开首页
     try:
@@ -156,9 +162,9 @@ class AutoExe():
       WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='left-panel']/nav/ul/li[1]/a")))
     except TimeoutException:
       self.driver.find_element(By.ID, "username").click()
-      self.driver.find_element(By.ID, "username").send_keys("DP_lw1111")
+      self.driver.find_element(By.ID, "username").send_keys("DP_dlyy127")
       self.driver.find_element(By.ID, "passwd").click()
-      self.driver.find_element(By.ID, "passwd").send_keys("DP_lw1111.")
+      self.driver.find_element(By.ID, "passwd").send_keys("DP_dlyy127")
       self.driver.find_element(By.ID, "form_button").click()
     try:
       if not self.running: return
@@ -343,8 +349,9 @@ def run_task(app):
 def shutdown_task(tui):
   #print(tui)
   tui.stop()
+
   #tui["t"].join()
-  tui.teardown_method()
+  #tui.teardown_method()
   #tui = {}
   pass
 ####################################################
@@ -377,7 +384,7 @@ Builder.load_string('''
         font_size: '50sp'
         color: 1,0,0,1
         background_color: 1,0,0,1
-        on_release: root.manager.current = 'stop';root.do_start(app,self.min_state_time)
+        on_release: root.do_start(app,self.min_state_time);root.manager.current = 'stop'
 
 <StopScreen>:
     name: 'stop'
@@ -388,7 +395,7 @@ Builder.load_string('''
         font_size: '50sp'
         color: 0,1,0,1
         background_color: 0,1,0,1
-        on_release: root.manager.current = 'start'
+        on_release: ss = root.manager.get_screen("start");ss.restart = False;ss.btn = True; root.manager.current = 'start'
 ''')
 
 
@@ -399,26 +406,39 @@ class StartScreen(Screen):
   # def on_pre_enter(self):
   #   Window.bind(mouse_pos=self.on_mouse_pos)
   def do_start(self,app,mst = 0):
-    #print(mst)
     if hasattr(self, 'thr'):
       self.thr.join()
       del self.thr
     if hasattr(self, 'tui'):
       del self.tui
     self.thr, self.tui = run_task(app)
+    self.restart = False
+    self.btn = False
     printF('开始自动化任务')
+  def on_enter(self):
+    print("on_enter")
+    if hasattr(self, 'restart') and self.restart == True and self.btn == False:
+      printF("自动重启")
+      self.restart = False
+      #time.sleep(5)
+      self.do_start(self.manager.app)
+      self.manager.current = 'stop'
+    elif hasattr(self, 'btn') and self.btn == True:
+      self.btn == False
+
   # def on_mouse_pos(self, window, pos):
   #   print(window,pos)
 
 class StopScreen(Screen):
   def do_stop(self, scn, mst = 0):
-    #print(mst)
+    #print(scn)
     if hasattr(scn, 'tui') and scn.tui:
       #print(scn.tui)
       shutdown_task(scn.tui)
       del scn.tui
       printF('停止自动化任务')
-  def on_pre_leave(self):
+  def on_leave(self):
+    print("on_leave")
     self.do_stop(self.manager.get_screen("start"))
 class TestApp(App):
   #shape_image = StringProperty('', force_dispatch=True)
@@ -466,7 +486,9 @@ class TestApp(App):
       Window.top = Window.top + 10   
 
   def build(self):
-    return ScreenManager()
+    sm  = ScreenManager()
+    sm.app = self
+    return sm
 
 def main():
   #global app
@@ -477,7 +499,7 @@ if __name__ == "__main__":
   #cwd = os.getcwd().replace("\\", "/")
   #printF(cwd)
   try:
-    response = urllib.request.urlopen('https://gitee.com/coolxv/g7auto/blob/master/DP_lw1111')
+    response = urllib.request.urlopen('https://gitee.com/coolxv/g7auto/blob/master/DP_dlyy127')
     if response.status == 200:
       main()
   except urllib.error.URLError as e:
