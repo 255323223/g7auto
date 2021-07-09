@@ -96,6 +96,7 @@ class AutoExe():
     # options.add_argument("--window-size=1920,1080")
     # options.add_argument("--headless")
     # options.add_argument('--disable-gpu')
+    ##
     # options.add_argument('--remote-debugging-port=9222')
     # service = Service('chromedriver')
     # service.creationflags = CREATE_NO_WINDOW
@@ -117,60 +118,61 @@ class AutoExe():
   def run(self,app):
     try:
       self.run_inter(app)
+    except NoSuchElementException:
+      printF("run NoSuchElementException")
     except NoSuchWindowException:
       printF("run NoSuchWindowException")
-    except WebDriverException:
+    except TimeoutException:
+      printF("run TimeoutException")
+    except WebDriverException as we:
       printF("run WebDriverException")
+      printF(we)
     except ConnectionResetError:
       printF("run ConnectionResetError")
     except ConnectionError:
       printF("run ConnectionError")
+    except:
+      printF("run except")
     finally:
       #print(app.root.screens)
       printF("停止自动化任务(被动)")
       #app.root.get_screen("stop").do_stop(app.root.get_screen("start"))
       app.root.current = 'start'
   def run_inter(self,app):
-    #print(app)
+    # 打开首页
     try:
+      if not self.running: return
       self.driver.implicitly_wait(2) # seconds
       self.driver.get("http://deppon-g7s.co.huoyunren.com/#home.html")
       time.sleep(3)
       #self.driver.maximize_window()
       #self.driver.fullscreen_window()
-    except NoSuchWindowException:
-      printF("run_inter NoSuchWindowException")
-      return
-    except WebDriverException:
-      printF("run_inter WebDriverException")
-      return
+    except:
+      printF("失败，打开首页")
+      raise
+    # 登录
     try:
       if not self.running: return
-      element = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='left-panel']/nav/ul/li[1]/a")))
+      WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='left-panel']/nav/ul/li[1]/a")))
     except TimeoutException:
       self.driver.find_element(By.ID, "username").click()
-      self.driver.find_element(By.ID, "username").send_keys("DP_dlyy127")
+      self.driver.find_element(By.ID, "username").send_keys("DP_lw1111")
       self.driver.find_element(By.ID, "passwd").click()
-      self.driver.find_element(By.ID, "passwd").send_keys("DP_dlyy127")
+      self.driver.find_element(By.ID, "passwd").send_keys("DP_lw1111.")
       self.driver.find_element(By.ID, "form_button").click()
-      printF("登录")
     try:
       if not self.running: return
       element = WebDriverWait(self.driver, 20).until(EC.presence_of_element_located((By.XPATH, "//*[@id='left-panel']/nav/ul/li[4]/a/span")))
     except TimeoutException:
-      printF("run_inter TimeoutException 登录")
+      printF("失败，登录")
       return
+    printF("登录成功")
     # 去除指引
     try:
       if not self.running: return
-      element = WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[11]/div[9]")))
-    except TimeoutException:
-      pass
-    try:
-      if not self.running: return
-      self.driver.find_element(By.XPATH, "/html/body/div[11]/div[9]").click()
+      WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[11]/div[9]"))).click()
     except:
-        pass    
+      pass
     # 实时风险监控台new
     try:
       if not self.running: return
@@ -181,11 +183,11 @@ class AutoExe():
       time.sleep(0.5)
       self.driver.find_element(By.XPATH, "//*[@id='left-panel']/nav/ul/li[4]/ul/li[2]/ul/li[1]/a").click()
     except:
-      printF("run_inter 实时风险监控台new")
+      printF("失败，实时风险监控台new")
       return
     finally:
       try:
-        element = WebDriverWait(self.driver, 10).until(EC.new_window_is_opened(cur_handles))
+        WebDriverWait(self.driver, 10).until(EC.new_window_is_opened(cur_handles))
       except TimeoutException:
         printF("失败，等待新窗口")
         return
@@ -195,10 +197,11 @@ class AutoExe():
         printF("打开实时风险看板")
       except:
         printF("失败，打开新窗口") 
+        return
     # 选择中高风险
     try:
-      element = WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[2]/div[1]/div[1]/div/label[3]/span")))
-    except TimeoutException:
+      WebDriverWait(self.driver, 5).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[2]/div[1]/div[1]/div/label[3]/span")))
+    except:
       printF("失败，等待中高风险")
       return
     try:
@@ -206,41 +209,39 @@ class AutoExe():
       self.driver.find_element(By.XPATH, "//*[@id='content']/div[2]/div[1]/div[1]/div/label[3]/span").click()
       time.sleep(2)
     except:
-        printF("失败，选择中高风险")  
-        return
+      printF("失败，选择中高风险")  
+      return
     while self.running:
       # 发送ESC按键
       try:
         webdriver.ActionChains(self.driver).send_keys(Keys.ESCAPE).perform()
       except:
-        printF("发送ESC按键")
+        printF("失败，发送ESC按键")
+        raise
       # 隐藏侧边栏 
       try:
         if not self.running: return
         self.driver.find_element(By.XPATH, "//*[@id='content']/div[3]/div/div[1]/span[3]/i").click()
       except:
         pass
-        #printF("隐藏侧边栏")
       # 进行查询 
       try:
         if not self.running: return
-        WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[2]/div[1]/button/span")))
-        time.sleep(1)
-      except TimeoutException:
-        printF("失败，无查询按钮")
-        continue
-      try:
-        if not self.running: return
-        self.driver.find_element(By.XPATH, "//*[@id='content']/div[2]/div[1]/button/span").click()
+        WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[2]/div[1]/button/span"))).click()
         time.sleep(1)
       except:
-        printF("失败，点击查询")
+        printF("失败，查询")
+        try:
+          webdriver.ActionChains(self.driver).send_keys(Keys.F5).perform()
+          time.sleep(3)
+        except:
+          printF("失败，发送F5按键")
         continue
       # 点击第一项 
       try:
         if not self.running: return
         WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='listBody']/div[3]/div[1]")))
-      except TimeoutException:
+      except:
         printF("无数据")
         continue
       try:
@@ -253,13 +254,13 @@ class AutoExe():
       try:
         if not self.running: return
         WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[3]/div/div[1]/span[3]/i")))
-      except TimeoutException:
+      except:
         printF("失败，无侧边栏")
         continue
       try:
         if not self.running: return
         WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]")))
-      except TimeoutException:
+      except:
         printF("失败，无通知")
         continue
       num = 3
@@ -278,7 +279,7 @@ class AutoExe():
         try:
           if not self.running: return
           WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]/div/div[2]/div/div[2]/div/div/div/p[1]/span")))
-        except TimeoutException:
+        except:
           printF("失败，等待人工电话")
           continue
         try:
@@ -294,7 +295,7 @@ class AutoExe():
         if not self.running: return
         WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[12]/div[2]/div/div[1]/div[2]/div/div[3]/div/span[10]")))
         WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, "//*[@id='content']/div[12]/div[2]/div/div[1]/div[2]/div/div[4]/div/span[1]")))
-      except TimeoutException:
+      except:
         continue
       try:
         # 选择干预原因
@@ -476,9 +477,10 @@ if __name__ == "__main__":
   #cwd = os.getcwd().replace("\\", "/")
   #printF(cwd)
   try:
-    response = urllib.request.urlopen('https://gitee.com/coolxv/g7auto/blob/master/DP_dlyy127')
+    response = urllib.request.urlopen('https://gitee.com/coolxv/g7auto/blob/master/DP_lw1111')
     if response.status == 200:
       main()
   except urllib.error.URLError as e:
     printF("无使用权限")
     
+
