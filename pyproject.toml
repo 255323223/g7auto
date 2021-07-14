@@ -10,6 +10,8 @@ selenium = "^3.141"
 Kivy = "^2.0"
 kivyontop = "^1.4"
 pyautogui = "^0.9.52"
+lxml = "^4.6.3"
+pyyaml = "^5.4.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

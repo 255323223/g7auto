@@ -8,7 +8,10 @@ import urllib.request
 import urllib.error
 from threading import Thread
 import logging
+from lxml import etree
+import yaml
 
+from datetime import datetime,date,timedelta
 #logging.basicConfig(filename= 'G7Auto.log', filemode='w', level=logging.DEBUG, format='%(asctime)s.%(msecs)03d [%(pathname)s %(filename)s:%(lineno)d] %(message)s', datefmt='## %Y-%m-%d %H:%M:%S')
 logging.basicConfig(filename= 'G7Auto.log', filemode='w', level=logging.DEBUG, format='%(asctime)s.%(msecs)03d %(message)s', datefmt='## %Y-%m-%d %H:%M:%S')
 logging.getLogger("requests").setLevel(logging.ERROR)
@@ -69,7 +72,7 @@ from kivy.properties import (
     ListProperty,
 )
 from KivyOnTop import register_topmost, unregister_topmost
-
+ocwd = os.getcwd().replace("\\", "/")
 if hasattr(sys, '_MEIPASS'):
     os.chdir(sys._MEIPASS)
 
@@ -86,6 +89,17 @@ if hasattr(sys, '_MEIPASS'):
 # printF(default_shape)
 # printF(alpha_shape)
 
+# conf
+aaa_user = "xxx"
+aaa_pwd = "123456"
+aaa_headless_mode = False
+# para
+random_max = 20
+random_min = 5
+wait_time = 3
+hover_time = 0.5
+
+
 class AutoExe():
   def setup_method(self):
     #设置chrome浏览器无界面模式
@@ -93,9 +107,10 @@ class AutoExe():
     #options.add_argument('log-level=3')
     options.add_argument("--start-maximized")
     ##
-    # options.add_argument("--window-size=1920,1080")
-    # options.add_argument("--headless")
-    # options.add_argument('--disable-gpu')
+    if aaa_headless_mode:
+      options.add_argument("--window-size=1920,1080")
+      options.add_argument("--headless")
+      options.add_argument('--disable-gpu')
     ##
     # options.add_argument('--remote-debugging-port=9222')
     # service = Service('chromedriver')
@@ -148,7 +163,7 @@ class AutoExe():
     # 打开首页
     try:
       if not self.running: return
-      self.driver.implicitly_wait(2) # seconds
+      self.driver.implicitly_wait(wait_time) # seconds
       self.driver.get("http://deppon-g7s.co.huoyunren.com/#home.html")
       time.sleep(3)
       #self.driver.maximize_window()
@@ -162,9 +177,9 @@ class AutoExe():
       WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='left-panel']/nav/ul/li[1]/a")))
     except TimeoutException:
       self.driver.find_element(By.ID, "username").click()
-      self.driver.find_element(By.ID, "username").send_keys("DP_dlyy127")
+      self.driver.find_element(By.ID, "username").send_keys(aaa_user)
       self.driver.find_element(By.ID, "passwd").click()
-      self.driver.find_element(By.ID, "passwd").send_keys("DP_dlyy127")
+      self.driver.find_element(By.ID, "passwd").send_keys(aaa_pwd)
       self.driver.find_element(By.ID, "form_button").click()
     try:
       if not self.running: return
@@ -277,7 +292,7 @@ class AutoExe():
           element_to_hover_over = self.driver.find_element(By.XPATH, "//*[@id='content']/div[3]/div/div[3]/ul/li[1]")
           hover = ActionChains(self.driver).move_to_element(element_to_hover_over).click(element_to_hover_over).click(element_to_hover_over)
           hover.perform()
-          time.sleep(0.5)
+          time.sleep(hover_time)
         except:
           printF("失败，点击通知")
           continue
@@ -328,7 +343,7 @@ class AutoExe():
         self.driver.find_element(By.XPATH, "//*[@id='content']/div[12]/div[2]/div/div[1]/div[3]/div/button/span").click()
         self.count = self.count + 1
         printF(f"已经完成任务:{self.count}")
-        time.sleep(3)
+        time.sleep(random.randint(random_min,random_max))
       except:
         printF("失败，保存")
         continue
@@ -489,6 +504,57 @@ class TestApp(App):
     sm  = ScreenManager()
     sm.app = self
     return sm
+####################################################
+###   main
+####################################################
+def proc_config(file):
+  try:
+    with open(file, 'r') as f:
+      conf = yaml.load(f)
+      ## user
+      if "user" in conf:
+        global aaa_user
+        aaa_user = conf["user"]  
+      if "password" in conf:
+        global aaa_pwd
+        aaa_pwd = conf["password"]  
+      if "headless_mode" in conf:
+        global aaa_headless_mode
+        aaa_headless_mode = conf["headless_mode"]  
+      ## para 
+      if "hover_time" in conf:
+        global hover_time
+        hover_time = conf["hover_time"]  
+      if "wait_time" in conf:
+        global wait_time
+        wait_time = conf["wait_time"]  
+      if "random_max" in conf:
+        global random_max
+        random_max = conf["random_max"]  
+      if "random_min" in conf:
+        global random_min
+        random_min = conf["random_min"]          
+  except IOError:
+      printF(f"无账号密码文件:{file}")
+
+
+def proc_aaa(html):
+  aaa = yaml.load(html)
+  if aaa == None:
+    return True
+  ## auth
+  if "to_date" in aaa:
+    to_date = datetime.strptime(aaa["to_date"], '%Y-%m-%d')
+    to_date += timedelta(days=1)
+    print(to_date)
+    cur_date = datetime.now()
+    if to_date > cur_date:
+      return True
+  return False
+  #对 html文本进行处理 获得一个_Element对象
+  #dom = etree.HTML(html)
+  #a_text = dom.xpath('//*[@id="tree-content-holder"]/div/div[3]/')
+  #print(a_text)
 
 def main():
   #global app
@@ -499,9 +565,13 @@ if __name__ == "__main__":
   #cwd = os.getcwd().replace("\\", "/")
   #printF(cwd)
   try:
-    response = urllib.request.urlopen('https://gitee.com/coolxv/g7auto/blob/master/DP_dlyy127')
+    config_file = f'{ocwd}/G7Auto.txt'
+    proc_config(config_file)
+    response = urllib.request.urlopen(f'https://gitee.com/coolxv/g7auto/raw/master/{aaa_user}')
     if response.status == 200:
-      main()
+      html = response.read()
+      if proc_aaa(html) == True:
+        main()
   except urllib.error.URLError as e:
     printF("无使用权限")
     
