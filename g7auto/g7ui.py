@@ -16,7 +16,7 @@ from datetime import datetime,date,timedelta
 logging.basicConfig(filename= 'G7Auto.log', filemode='w', level=logging.DEBUG, format='%(asctime)s.%(msecs)03d %(message)s', datefmt='## %Y-%m-%d %H:%M:%S')
 logging.getLogger("requests").setLevel(logging.ERROR)
 logging.getLogger("urllib3").setLevel(logging.ERROR)
-logging.getLogger("kivy").setLevel(logging.ERROR)
+#logging.getLogger("kivy").setLevel(logging.ERROR)
 logger = logging.getLogger()
 #logger.addHandler(logging.FileHandler('G7Auto.log', 'w'))
 printF = logger.debug
@@ -64,6 +64,9 @@ from kivy.uix.screenmanager import Screen
 from kivy.uix.screenmanager import ScreenManager
 from kivy.config import Config
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.widget import Widget
+from kivy.uix.label import Label
+from kivy.uix.popup import Popup
 from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.properties import (
@@ -260,14 +263,14 @@ class AutoExe():
         continue
       # 点击第一项 
       try:
-        if not self.running: return
-        WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='listBody']/div[3]/div[1]")))
+        if not self.running: return 
+        WebDriverWait(self.driver, 3).until(EC.presence_of_element_located((By.XPATH, "//*[@id='listBody']/div[1]/div[1]")))
       except:
         printF("无数据")
         continue
       try:
         if not self.running: return
-        self.driver.find_element(By.XPATH, "//*[@id='listBody']/div[3]/div[1]").click()
+        self.driver.find_element(By.XPATH, "//*[@id='listBody']/div[1]/div[1]").click()
       except:
         printF("失败，点击第一项")
         continue
@@ -389,6 +392,7 @@ Builder.load_string('''
 <ScreenManager>:
     StartScreen
     StopScreen
+    ConfigScreen
 
 <StartScreen>:
     name: 'start'
@@ -411,11 +415,42 @@ Builder.load_string('''
         color: 0,1,0,1
         background_color: 0,1,0,1
         on_release: ss = root.manager.get_screen("start");ss.restart = False;ss.btn = True; root.manager.current = 'start'
+<ConfigScreen>:
+    name: 'config'
+<Popups>:
+    Label:
+        text: "You pressed the button"
+        size_hint: 0.6, 0.2
+        pos_hint: {"x":0.2, "top":1}
+    Button:
+        text: "Close the popup"
+        # set size of the button
+        size_hint: 1, 0.4
+        # set position of the button  
+        pos_hint: {"x":0, "y":0.1}
+
+
 ''')
 
+def show_popup():
+    show = Popups()
+  
+    popupWindow = Popup(title ="Popup Window", content = show,
+                        size_hint =(None, None), size =(200, 200))
+  
+    # open popup window
+    popupWindow.open()
+  
+    # Attach close button press with popup.dismiss action
+    # content.bind(on_press = popup.dismiss)
+  
+class ConfigScreen(Screen):
+  pass
+class Popups(FloatLayout):
+  pass
 
 class ScreenManager(ScreenManager):
-    pass
+  pass
 
 class StartScreen(Screen):
   # def on_pre_enter(self):
@@ -499,7 +534,10 @@ class TestApp(App):
       Window.top = Window.top - 10   
     elif key == 's' or t3 == 81:
       Window.top = Window.top + 10   
+    elif key == 'c':
+      pass
 
+    
   def build(self):
     sm  = ScreenManager()
     sm.app = self
